@@ -17,13 +17,13 @@ export class LoadBalancerStack extends Stack {
       targetGroupName: "vlr-api-target",
       targetType: TargetType.IP,
       port: 50051,
-      vpc: vpc,
+      vpc,
     });
 
     // Load balancer
     const nlb = new NetworkLoadBalancer(this, "vlr-nlb", {
       loadBalancerName: "vlr-nlb",
-      vpc: vpc,
+      vpc,
       internetFacing: true,
       vpcSubnets: {
         subnetType: SubnetType.PUBLIC,

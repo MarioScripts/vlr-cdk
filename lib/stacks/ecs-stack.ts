@@ -16,7 +16,8 @@ import {
 import { NetworkTargetGroup } from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import { PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
-import { Duration } from "aws-cdk-lib/core"
+import { Duration } from "aws-cdk-lib/core";
+import { Repository } from "aws-cdk-lib/aws-ecr";
 
 export class ECSStack extends Stack {
   constructor(
@@ -56,10 +57,11 @@ export class ECSStack extends Stack {
       executionRole,
     }).addContainer("vlr-api-container", {
       containerName: "vlr-api",
-      image: ContainerImage.fromRegistry(
-        "991764619378.dkr.ecr.us-east-1.amazonaws.com/vlr-api:latest"
+      image: ContainerImage.fromEcrRepository(
+        Repository.fromRepositoryName(this, "vlr-ecr-repo", "vlr-api"),
+        "latest"
       ),
-      logging: LogDriver.awsLogs({streamPrefix: "vlr-api"}),
+      logging: LogDriver.awsLogs({ streamPrefix: "vlr-api" }),
       portMappings: [{ containerPort: 50051, hostPort: 50051 }],
     });
 
@@ -68,8 +70,7 @@ export class ECSStack extends Stack {
       securityGroupName: "vlr-sg",
       vpc,
     });
-    vlrSg.addIngressRule(Peer.anyIpv4(), Port.tcp(443));
-    vlrSg.addIngressRule(Peer.anyIpv4(), Port.tcp(80));
+    vlrSg.addIngressRule(Peer.anyIpv4(), Port.tcp(50051));
 
     // Service
     const ecsService = new FargateService(this, "vlr-api-service", {
@@ -79,9 +80,9 @@ export class ECSStack extends Stack {
       assignPublicIp: true,
       vpcSubnets: {
         subnetType: SubnetType.PUBLIC,
+        onePerAz: true,
       },
       securityGroups: [vlrSg],
-      healthCheckGracePeriod: Duration.seconds(2_147_483_647)
     });
 
     targetGroup.addTarget(ecsService);
