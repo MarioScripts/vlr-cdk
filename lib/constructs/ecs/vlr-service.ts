@@ -1,4 +1,5 @@
 import {
+    IVpc,
   Peer,
   Port,
   SecurityGroup,
@@ -27,7 +28,7 @@ export default class VlrService extends Construct {
       securityGroupName: "vlr-sg",
       vpc: resources.vpc,
     });
-    vlrSg.addIngressRule(Peer.anyIpv4(), Port.tcp(50051));
+    vlrSg.addIngressRule(Peer.anyIpv4(), Port.tcp(this.node.tryGetContext("VLRAPI_CONTAINER_PORT")));
 
     // Service
     this.service = new FargateService(this, id, {

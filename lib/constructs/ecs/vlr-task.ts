@@ -2,7 +2,7 @@ import { Repository } from "aws-cdk-lib/aws-ecr";
 import {
   ContainerImage,
   FargateTaskDefinition,
-  LogDriver
+  LogDriver,
 } from "aws-cdk-lib/aws-ecs";
 import { PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
@@ -43,7 +43,12 @@ export default class VlrTask extends Construct {
         "latest"
       ),
       logging: LogDriver.awsLogs({ streamPrefix: "vlr-api" }),
-      portMappings: [{ containerPort: 50051, hostPort: 50051 }],
+      portMappings: [
+        {
+          containerPort: this.node.tryGetContext("VLRAPI_CONTAINER_PORT"),
+          hostPort: this.node.tryGetContext("VLRAPI_CONTAINER_PORT"),
+        },
+      ],
     });
   }
 }
