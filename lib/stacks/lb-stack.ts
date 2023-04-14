@@ -1,18 +1,19 @@
 import { Stack, StackProps } from "aws-cdk-lib";
-import { SubnetType, Vpc } from "aws-cdk-lib/aws-ec2";
+import { Vpc } from "aws-cdk-lib/aws-ec2";
 import {
-  NetworkLoadBalancer,
   NetworkTargetGroup,
   TargetType
 } from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import { Construct } from "constructs";
+import VlrLoadBalancer from "../constructs/lb/vlr-lb";
 
 export class LoadBalancerStack extends Stack {
   public readonly vlrTargetGroup: NetworkTargetGroup;
   constructor(scope: Construct, id: string, props: StackProps) {
     super(scope, id, props);
-    // Target Group
     const vpc = Vpc.fromLookup(this, "default-vpc", { isDefault: true });
+    
+    // Target Group
     this.vlrTargetGroup = new NetworkTargetGroup(this, "vlr-target-group", {
       targetGroupName: "vlr-api-target",
       targetType: TargetType.IP,
@@ -20,23 +21,10 @@ export class LoadBalancerStack extends Stack {
       vpc,
     });
 
-    // Load balancer
-    const nlb = new NetworkLoadBalancer(this, "vlr-nlb", {
-      loadBalancerName: "vlr-nlb",
+    // Load Balancer
+    new VlrLoadBalancer(this, "vlr-nlb", {
       vpc,
-      internetFacing: true,
-      vpcSubnets: {
-        subnetType: SubnetType.PUBLIC,
-        onePerAz: true,
-      },
+      targetGroup: this.vlrTargetGroup,
     });
-
-    // Add listeners
-    [80, 443].forEach((port: number) =>
-      nlb.addListener(`port-${port}-listener`, {
-        port,
-        defaultTargetGroups: [this.vlrTargetGroup],
-      })
-    );
   }
 }
