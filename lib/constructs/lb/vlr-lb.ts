@@ -5,10 +5,14 @@ import {
 } from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import { Construct } from "constructs";
 
-export interface VlrNLBResources {
-  targetGroup: NetworkTargetGroup;
-  vpc: IVpc;
+export interface TargetGroups {
+  gatewayTargetGroup: NetworkTargetGroup;
+  grpcTargetGroup: NetworkTargetGroup;
 }
+
+export type VlrNLBResources = {
+  vpc: IVpc;
+} & TargetGroups
 
 export default class VlrLoadBalancer extends Construct {
   public readonly nlb: NetworkLoadBalancer;
@@ -29,8 +33,13 @@ export default class VlrLoadBalancer extends Construct {
     [80, 443].forEach((port: number) =>
       nlb.addListener(`port-${port}-listener`, {
         port,
-        defaultTargetGroups: [resources.targetGroup],
+        defaultTargetGroups: [resources.gatewayTargetGroup],
       })
     );
+
+    nlb.addListener('port-50051-listener', {
+      port: this.node.tryGetContext("VLRAPI_GRPC_PORT"),
+      defaultTargetGroups: [resources.grpcTargetGroup]
+    })
   }
 }

@@ -1,14 +1,14 @@
 import {
-    IVpc,
+  IVpc,
   Peer,
   Port,
   SecurityGroup,
-  SubnetType
+  SubnetType,
 } from "aws-cdk-lib/aws-ec2";
 import {
   Cluster,
   FargateService,
-  FargateTaskDefinition
+  FargateTaskDefinition,
 } from "aws-cdk-lib/aws-ecs";
 import { Construct } from "constructs";
 
@@ -28,7 +28,14 @@ export default class VlrService extends Construct {
       securityGroupName: "vlr-sg",
       vpc: resources.vpc,
     });
-    vlrSg.addIngressRule(Peer.anyIpv4(), Port.tcp(this.node.tryGetContext("VLRAPI_CONTAINER_PORT")));
+    vlrSg.addIngressRule(
+      Peer.anyIpv4(),
+      Port.tcp(this.node.tryGetContext("VLRAPI_GRPC_PORT"))
+    );
+    vlrSg.addIngressRule(
+      Peer.anyIpv4(),
+      Port.tcp(this.node.tryGetContext("VLRAPI_GATEWAY_PORT"))
+    );
 
     // Service
     this.service = new FargateService(this, id, {

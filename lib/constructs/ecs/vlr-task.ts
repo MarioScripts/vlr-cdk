@@ -45,8 +45,12 @@ export default class VlrTask extends Construct {
       logging: LogDriver.awsLogs({ streamPrefix: "vlr-api" }),
       portMappings: [
         {
-          containerPort: this.node.tryGetContext("VLRAPI_CONTAINER_PORT"),
-          hostPort: this.node.tryGetContext("VLRAPI_CONTAINER_PORT"),
+          containerPort: this.node.tryGetContext("VLRAPI_GRPC_PORT"),
+          hostPort: this.node.tryGetContext("VLRAPI_GRPC_PORT"),
+        },
+        {
+          containerPort: this.node.tryGetContext("VLRAPI_GATEWAY_PORT"),
+          hostPort: this.node.tryGetContext("VLRAPI_GATEWAY_PORT"),
         },
       ],
     });
